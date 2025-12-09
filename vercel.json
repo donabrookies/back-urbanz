@@ -1,29 +1,20 @@
 {
   "version": 2,
-  "name": "urbanz-backend",
-  "public": false,
-  "regions": ["gru1"],
   "builds": [
     {
-      "src": "server.js",
+      "src": "index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "server.js",
-      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      "headers": {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
-        "Access-Control-Allow-Credentials": "true"
-      }
+      "dest": "/"
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "NODE_VERSION": "22.x"
+    "SUPABASE_URL": "@supabase_url",
+    "SUPABASE_KEY": "@supabase_key",
+    "NODE_ENV": "production"
   }
 }
