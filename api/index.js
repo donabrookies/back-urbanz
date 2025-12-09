@@ -1,16 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { createClient } from '@supabase/supabase-js';
-app.use(cors({
-  origin: [
-    'https://seu-frontend.vercel.app',
-    'http://localhost:3000',
-    'http://127.0.0.1:5500'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+
 // Configuração do Supabase usando variáveis de ambiente da Vercel
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
