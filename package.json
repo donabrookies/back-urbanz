@@ -1,24 +1,23 @@
 {
-  "name": "urbanz-backend",
-  "version": "1.0.0",
-  "description": "Backend para loja UrbanZ",
-  "main": "index.js",
+  "name": "urbanz-backend-vercel",
+  "version": "2.0.0",
+  "description": "Backend para loja Urban Z - Deploy na Vercel",
   "type": "module",
+  "main": "api/index.js",
+  "engines": {
+    "node": ">=22.x"
+  },
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "vercel-build": "echo 'Building for Vercel'"
+    "start": "node api/index.js",
+    "dev": "node --watch api/index.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
     "@supabase/supabase-js": "^2.39.0"
   },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  },
-  "engines": {
-    "node": ">=22.0.0"
-  }
+  "devDependencies": {},
+  "keywords": ["urbanz", "backend", "ecommerce", "vercel"],
+  "author": "Urban Z",
+  "license": "MIT"
 }
