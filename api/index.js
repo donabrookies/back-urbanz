@@ -56,15 +56,13 @@ function normalizeCategories(categories) {
   }).filter(cat => cat !== null);
 }
 
-// Normalizar produtos - VERSÃO CORRIGIDA
+// Normalizar produtos
 function normalizeProducts(products) {
   if (!Array.isArray(products)) return [];
   
   return products.map((product, index) => {
-    // Garantir que temos um ID
     const id = product.id || index + 1;
     
-    // Garantir que colors seja um array válido
     let colors = [];
     
     if (product.colors && Array.isArray(product.colors)) {
@@ -82,7 +80,6 @@ function normalizeProducts(products) {
         ]
       }));
     } else {
-      // Estrutura padrão se não houver cores
       colors = [{
         name: 'Padrão',
         image: product.image || 'https://via.placeholder.com/400x300',
@@ -158,12 +155,6 @@ app.post("/api/auth/login", async (req, res) => {
 // Buscar produtos
 app.get("/api/products", async (req, res) => {
   try {
-    // Cache headers para velocidade
-    res.set({
-      'Cache-Control': 'public, max-age=120',
-      'X-Content-Type-Options': 'nosniff'
-    });
-
     // Verificar cache em memória
     const now = Date.now();
     if (cache.products && (now - cache.productsTimestamp) < CACHE_DURATION) {
@@ -228,7 +219,7 @@ app.get("/api/categories", async (req, res) => {
   }
 });
 
-// Salvar produtos - VERSÃO CORRIGIDA
+// Salvar produtos
 app.post("/api/products", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -256,14 +247,12 @@ app.post("/api/products", async (req, res) => {
 
     if (deleteError && !deleteError.message.includes('No rows found')) {
       console.error('❌ Erro ao deletar produtos:', deleteError);
-      // Continuar mesmo se não houver produtos para deletar
     }
 
-    // Inserir os novos produtos (em batches se for muito grande)
+    // Inserir os novos produtos
     if (normalizedProducts.length > 0) {
       console.log(`📤 Inserindo ${normalizedProducts.length} produtos...`);
       
-      // Preparar dados para inserção
       const productsToInsert = normalizedProducts.map(product => ({
         title: product.title,
         category: product.category,
@@ -281,8 +270,8 @@ app.post("/api/products", async (req, res) => {
       if (insertError) {
         console.error('❌ Erro ao inserir produtos:', insertError);
         
-        // Tentar inserir um por um para debug
-        console.log('🔄 Tentando inserir produtos individualmente para debug...');
+        // Tentar inserir um por um
+        console.log('🔄 Tentando inserir produtos individualmente...');
         const errors = [];
         const successful = [];
         
@@ -294,7 +283,6 @@ app.post("/api/products", async (req, res) => {
             
             if (singleError) {
               errors.push({ product: product.title, error: singleError.message });
-              console.error(`❌ Erro ao inserir ${product.title}:`, singleError.message);
             } else {
               successful.push(product.title);
             }
@@ -325,8 +313,7 @@ app.post("/api/products", async (req, res) => {
   } catch (error) {
     console.error("❌ Erro ao salvar produtos:", error);
     res.status(500).json({ 
-      error: "Erro ao salvar produtos: " + error.message,
-      details: error.message 
+      error: "Erro ao salvar produtos: " + error.message
     });
   }
 });
@@ -386,7 +373,7 @@ app.delete("/api/categories/:categoryId", async (req, res) => {
     const { categoryId } = req.params;
     console.log(`🗑️ Tentando excluir categoria: ${categoryId}`);
     
-    // Primeiro verificar se a categoria existe
+    // Verificar se a categoria existe
     const { data: category, error: fetchError } = await supabase
       .from('categories')
       .select('*')
@@ -415,7 +402,6 @@ app.delete("/api/categories/:categoryId", async (req, res) => {
     if (productsInCategory && productsInCategory.length > 0) {
       console.log(`🔄 Movendo ${productsInCategory.length} produtos da categoria...`);
       
-      // Buscar outra categoria para mover os produtos
       const { data: otherCategories } = await supabase
         .from('categories')
         .select('id')
@@ -439,7 +425,7 @@ app.delete("/api/categories/:categoryId", async (req, res) => {
       }
     }
 
-    // Agora deletar a categoria
+    // Deletar a categoria
     const { error: deleteError } = await supabase
       .from('categories')
       .delete()
@@ -553,16 +539,14 @@ app.post("/api/cache/clear", (req, res) => {
   res.json({ success: true, message: "Cache de produtos limpo com sucesso" });
 });
 
-// Endpoint para ver estrutura da tabela (debug)
+// Endpoint para debug
 app.get("/api/debug/tables", async (req, res) => {
   try {
-    // Verificar estrutura da tabela products
     const { data: products, error: productsError } = await supabase
       .from('products')
       .select('*')
       .limit(1);
     
-    // Verificar estrutura da tabela categories
     const { data: categories, error: categoriesError } = await supabase
       .from('categories')
       .select('*')
@@ -582,4 +566,7 @@ app.get("/api/debug/tables", async (req, res) => {
 });
 
 // NOVO: Handler para a Vercel Serverless Functions
-export default app;
+export default (req, res) => {
+  // Iniciar o app Express
+  app(req, res);
+};
