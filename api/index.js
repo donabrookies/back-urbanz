@@ -565,6 +565,69 @@ app.get("/api/debug/tables", async (req, res) => {
   }
 });
 
+// NOVO: Endpoint para atualizar estoque em tempo real
+app.post("/api/stock/update", async (req, res) => {
+  try {
+    const { productId, colorIndex, size, quantityChange } = req.body;
+    
+    if (!productId || colorIndex === undefined || !size || !quantityChange) {
+      return res.status(400).json({ error: "Dados inválidos para atualização de estoque" });
+    }
+    
+    console.log(`📊 Atualizando estoque: Produto ${productId}, Cor ${colorIndex}, Tamanho ${size}, Alteração: ${quantityChange}`);
+    
+    // Buscar o produto atual
+    const { data: products, error: fetchError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId);
+    
+    if (fetchError || !products || products.length === 0) {
+      return res.status(404).json({ error: "Produto não encontrado" });
+    }
+    
+    const product = products[0];
+    
+    // Atualizar o estoque
+    if (product.colors && product.colors[colorIndex]) {
+      const color = product.colors[colorIndex];
+      const sizeIndex = color.sizes.findIndex(s => s.name === size);
+      
+      if (sizeIndex !== -1) {
+        // Calcular novo estoque (não permitir negativo)
+        const newStock = Math.max(0, color.sizes[sizeIndex].stock + quantityChange);
+        product.colors[colorIndex].sizes[sizeIndex].stock = newStock;
+        
+        // Atualizar no banco de dados
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ colors: product.colors })
+          .eq('id', productId);
+        
+        if (updateError) {
+          throw updateError;
+        }
+        
+        // Limpar cache
+        clearCache();
+        
+        res.json({ 
+          success: true, 
+          message: "Estoque atualizado com sucesso",
+          newStock: newStock
+        });
+      } else {
+        res.status(400).json({ error: "Tamanho não encontrado" });
+      }
+    } else {
+      res.status(400).json({ error: "Cor não encontrada" });
+    }
+  } catch (error) {
+    console.error("❌ Erro ao atualizar estoque:", error);
+    res.status(500).json({ error: "Erro ao atualizar estoque: " + error.message });
+  }
+});
+
 // NOVO: Handler para a Vercel Serverless Functions
 export default (req, res) => {
   // Iniciar o app Express
