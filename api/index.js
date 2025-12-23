@@ -633,3 +633,41 @@ export default (req, res) => {
   // Iniciar o app Express
   app(req, res);
 };
+// Adicione após os outros endpoints no backend
+app.put("/api/products/:id", async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !checkAuth(authHeader.replace("Bearer ", ""))) {
+            return res.status(401).json({ error: "Não autorizado" });
+        }
+        
+        const productId = req.params.id;
+        const productData = req.body;
+        
+        console.log(`✏️ Atualizando produto ${productId}...`);
+        
+        const { data, error } = await supabase
+            .from('products')
+            .update(productData)
+            .eq('id', productId)
+            .select();
+        
+        if (error) {
+            console.error('❌ Erro ao atualizar produto:', error);
+            throw error;
+        }
+        
+        // Limpar cache
+        clearCache();
+        
+        res.json({ 
+            success: true, 
+            message: "Produto atualizado com sucesso",
+            product: data[0] 
+        });
+        
+    } catch (error) {
+        console.error("❌ Erro ao atualizar produto:", error);
+        res.status(500).json({ error: "Erro ao atualizar produto: " + error.message });
+    }
+});
