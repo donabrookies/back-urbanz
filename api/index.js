@@ -523,54 +523,12 @@ app.get("/api/auth/verify", async (req, res) => {
   }
 });
 
-// Health check
-app.get("/", (req, res) => {
-  res.json({ 
-    message: "🚀 Backend Urban Z v2.0 está funcionando na Vercel!", 
-    status: "OK",
-    version: "2.0.0",
-    features: ["Produtos com cores", "Categorias", "Autenticação"]
-  });
-});
-
-// Endpoint para limpar cache manualmente
-app.post("/api/cache/clear", (req, res) => {
-  clearCache();
-  res.json({ success: true, message: "Cache de produtos limpo com sucesso" });
-});
-
-// Endpoint para debug
-app.get("/api/debug/tables", async (req, res) => {
-  try {
-    const { data: products, error: productsError } = await supabase
-      .from('products')
-      .select('*')
-      .limit(1);
-    
-    const { data: categories, error: categoriesError } = await supabase
-      .from('categories')
-      .select('*')
-      .limit(1);
-    
-    res.json({ 
-      products_structure: productsError ? productsError.message : 'OK',
-      categories_structure: categoriesError ? categoriesError.message : 'OK',
-      sample_product: products && products.length > 0 ? {
-        columns: Object.keys(products[0]),
-        has_colors: 'colors' in products[0]
-      } : null
-    });
-  } catch (error) {
-    res.json({ error: error.message });
-  }
-});
-
 // NOVO: Endpoint para atualizar estoque em tempo real
 app.post("/api/stock/update", async (req, res) => {
   try {
     const { productId, colorIndex, size, quantityChange } = req.body;
     
-    if (!productId || colorIndex === undefined || !size || !quantityChange) {
+    if (!productId || colorIndex === undefined || !size || quantityChange === undefined) {
       return res.status(400).json({ error: "Dados inválidos para atualização de estoque" });
     }
     
@@ -625,6 +583,48 @@ app.post("/api/stock/update", async (req, res) => {
   } catch (error) {
     console.error("❌ Erro ao atualizar estoque:", error);
     res.status(500).json({ error: "Erro ao atualizar estoque: " + error.message });
+  }
+});
+
+// Health check
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "🚀 Backend Urban Z v2.0 está funcionando na Vercel!", 
+    status: "OK",
+    version: "2.0.0",
+    features: ["Produtos com cores", "Categorias", "Autenticação", "Estoque em tempo real"]
+  });
+});
+
+// Endpoint para limpar cache manualmente
+app.post("/api/cache/clear", (req, res) => {
+  clearCache();
+  res.json({ success: true, message: "Cache de produtos limpo com sucesso" });
+});
+
+// Endpoint para debug
+app.get("/api/debug/tables", async (req, res) => {
+  try {
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('*')
+      .limit(1);
+    
+    const { data: categories, error: categoriesError } = await supabase
+      .from('categories')
+      .select('*')
+      .limit(1);
+    
+    res.json({ 
+      products_structure: productsError ? productsError.message : 'OK',
+      categories_structure: categoriesError ? categoriesError.message : 'OK',
+      sample_product: products && products.length > 0 ? {
+        columns: Object.keys(products[0]),
+        has_colors: 'colors' in products[0]
+      } : null
+    });
+  } catch (error) {
+    res.json({ error: error.message });
   }
 });
 
